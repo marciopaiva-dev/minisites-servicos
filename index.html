@@ -52,7 +52,6 @@
     <button type="submit">Criar MiniSite</button>
   </form>
   <p id="resultado"></p>
-
   <script>
     const form = document.getElementById("minisiteForm");
     form.addEventListener("submit", async (e) => {
@@ -61,31 +60,26 @@
       const descricao = form.descricao.value;
       const telefone = form.telefone.value;
 
-      try {
-        const resposta = await fetch("https://minisites-servicos.netlify.app/.netlify/functions/gerar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ titulo, descricao, telefone }),
-        });
+      const resposta = await fetch("https://minisites-servicos.netlify.app/.netlify/functions/gerar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo, descricao, telefone }),
+      });
 
-        if (!resposta.ok) {
-          throw new Error("Erro ao gerar MiniSite");
-        }
-
-        const blob = await resposta.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "minisite.zip";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        document.getElementById("resultado").textContent = "MiniSite gerado com sucesso!";
-      } catch (error) {
-        document.getElementById("resultado").textContent = "Erro ao gerar MiniSite.";
-        console.error(error);
+      if (!resposta.ok) {
+        document.getElementById("resultado").innerText = "Erro ao gerar o MiniSite.";
+        return;
       }
+
+      const blob = await resposta.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "minisite.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      document.getElementById("resultado").innerText = "MiniSite criado com sucesso!";
     });
   </script>
 </body>
