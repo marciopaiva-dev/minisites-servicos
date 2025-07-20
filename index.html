@@ -58,21 +58,23 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      resultado.innerText = "Gerando MiniSite...";
+      resultado.textContent = "Gerando MiniSite...";
 
       const titulo = form.titulo.value;
       const descricao = form.descricao.value;
       const telefone = form.telefone.value;
 
       try {
-        const resposta = await fetch("/.netlify/functions/gerar", {
+        const resposta = await fetch("https://minisites-servicos.netlify.app/.netlify/functions/gerar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ titulo, descricao, telefone }),
+          body: JSON.stringify({ titulo, descricao, telefone })
         });
 
         if (!resposta.ok) {
-          throw new Error("Erro na resposta do servidor.");
+          const erroTexto = await resposta.text();
+          resultado.textContent = `Erro ao gerar o MiniSite: ${erroTexto}`;
+          return;
         }
 
         const blob = await resposta.blob();
@@ -83,10 +85,10 @@
         document.body.appendChild(a);
         a.click();
         a.remove();
-        resultado.innerText = "MiniSite gerado com sucesso!";
+        resultado.textContent = "MiniSite gerado com sucesso!";
       } catch (err) {
-        console.error(err);
-        resultado.innerText = "Erro ao gerar o MiniSite.";
+        console.error("Erro na requisição:", err);
+        resultado.textContent = `Erro ao gerar o MiniSite (JS): ${err.message}`;
       }
     });
   </script>
