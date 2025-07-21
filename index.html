@@ -41,6 +41,14 @@
     button:hover {
       background-color: #e6ac00;
     }
+    #resultado a {
+      color: #ffc300;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #resultado {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -52,6 +60,7 @@
     <button type="submit">Criar MiniSite</button>
   </form>
   <p id="resultado"></p>
+
   <script>
     const form = document.getElementById("minisiteForm");
     const resultado = document.getElementById("resultado");
@@ -77,15 +86,8 @@
           return;
         }
 
-        const blob = await resposta.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "minisite.zip";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        resultado.textContent = "MiniSite gerado com sucesso!";
+        const json = await resposta.json();
+        resultado.innerHTML = `✅ MiniSite gerado com sucesso:<br><a href="${json.url}" target="_blank">${json.url}</a>`;
       } catch (err) {
         console.error("Erro na requisição:", err);
         resultado.textContent = `Erro ao gerar o MiniSite (JS): ${err.message}`;
