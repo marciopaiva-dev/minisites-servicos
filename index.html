@@ -67,10 +67,9 @@
   </div>
 
   <script>
-    // ===== Endpoint ABSOLUTO do Netlify (não use relativo no Vercel) =====
-    const ENDPOINT = "https://minisites-servicos.netlify.app/.netlify/functions/gerar";
+    // Agora o front chama o PROXY local da Vercel (mesma origem, sem CORS)
+    const ENDPOINT = "/api/gerar";
 
-    // ===== Helpers =====
     const $ = (id) => document.getElementById(id);
     const onlyDigits = (s) => String(s || "").replace(/\D+/g, "");
     const hasURL = (txt) => /(https?:\/\/|www\.)/i.test(txt);
@@ -131,7 +130,6 @@
           return;
         }
 
-        // usa SEMPRE a URL final que vem do backend
         const previewUrl = data?.urlFinal || data?.outputs?.previewUrl || "";
         const docxUrl    = data?.outputs?.docxUrl || "";
 
