@@ -1,102 +1,59 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gerador de MiniSite</title>
+  <meta name="description" content="Gere automaticamente um MiniSite com WhatsApp e proposta em DOCX." />
   <style>
-    body {
-      background-color: #0f172a;
-      color: white;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 700px;
-      margin: auto;
-      padding: 20px;
-    }
-    h1 {
-      color: #facc15;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      background-color: #facc15;
-      color: black;
-      font-weight: bold;
-      padding: 12px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
-      font-size: 1rem;
-    }
-    button:hover {
-      background-color: #eab308;
-    }
-    .resultado {
-      background-color: #1e293b;
-      margin-top: 20px;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .erro {
-      color: red;
-      font-weight: bold;
-    }
-    .sucesso {
-      color: lightgreen;
-      font-weight: bold;
-    }
-    .link-area {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .link-area button {
-      width: auto;
-    }
+    body{background:#0f172a;color:#fff;font-family:Arial,system-ui,sans-serif;margin:0}
+    .container{max-width:720px;margin:0 auto;padding:24px}
+    h1{color:#facc15;margin:0 0 10px}
+    p.lead{color:#9fb4ca;margin:0 0 16px}
+    label{display:block;margin:12px 0 6px;font-weight:700}
+    input,textarea{width:100%;padding:10px;border-radius:8px;border:0;font-size:16px;color:#0f172a}
+    button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:#facc15;font-weight:800;cursor:pointer}
+    button:hover{background:#eab308}
+    .resultado{display:none;margin-top:16px;background:#111827;border:1px solid #233045;border-radius:10px;padding:12px}
+    .erro{color:#f87171;font-weight:700}
+    .sucesso{color:#22c55e;font-weight:700}
+    .link{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .link code{color:#ffe082;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+    .btn-sm{padding:8px 10px;border-radius:8px;border:1px solid #233045;background:#0b1220;color:#fff;text-decoration:none}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Gerador de MiniSite</h1>
-    <p>Preencha os campos e gere automaticamente uma landing page com WhatsApp e proposta em DOCX (quando habilitado).</p>
+    <p class="lead">Preencha os campos e gere automaticamente uma landing page com WhatsApp e, se habilitado, uma proposta em DOCX.</p>
 
     <label for="servico">Título do serviço</label>
-    <input type="text" id="servico" placeholder="Digite o nome do serviço" />
+    <input id="servico" placeholder="Ex.: Designer Gráfico" />
 
     <label for="descricaoCurta">Descrição curta (máx. 160 caracteres)</label>
-    <textarea id="descricaoCurta" maxlength="160" placeholder="Digite uma breve descrição"></textarea>
+    <textarea id="descricaoCurta" maxlength="160" placeholder="Ex.: Criação de artes para redes sociais"></textarea>
 
     <label for="whats">WhatsApp com DDD</label>
-    <input type="text" id="whats" placeholder="(99) 99999-9999" />
+    <input id="whats" placeholder="(48) 99999-8889" />
 
-    <button id="btnGerar">Criar MiniSite</button>
+    <button id="btn">Criar MiniSite</button>
 
-    <div id="resultado" class="resultado" style="display:none;"></div>
+    <div id="resultado" class="resultado"></div>
   </div>
 
   <script>
     const ENDPOINT = "/api/gerar";
+    const $ = (id) => document.getElementById(id);
 
-    document.getElementById("btnGerar").addEventListener("click", async () => {
-      const servico = document.getElementById("servico").value.trim();
-      const descricaoCurta = document.getElementById("descricaoCurta").value.trim();
-      const whats = document.getElementById("whats").value.replace(/\D/g, "");
+    $("btn").addEventListener("click", async () => {
+      const servico = $("servico").value.trim();
+      const descricaoCurta = $("descricaoCurta").value.trim();
+      const whats = $("whats").value.replace(/\D/g, "");
 
-      const resultadoDiv = document.getElementById("resultado");
-      resultadoDiv.style.display = "block";
-      resultadoDiv.innerHTML = "Processando...";
-      resultadoDiv.className = "resultado";
+      const r = $("resultado");
+      r.style.display = "block";
+      r.className = "resultado";
+      r.textContent = "Gerando MiniSite...";
 
       try {
         const resp = await fetch(ENDPOINT, {
@@ -105,25 +62,46 @@
           body: JSON.stringify({ servico, descricaoCurta, whats })
         });
 
-        if (!resp.ok) {
-          throw new Error(`Falha (HTTP ${resp.status})`);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.ok) {
+          const msg = data?.error || data?.mensagem || `Falha (HTTP ${resp.status})`;
+          r.innerHTML = `<div class="erro">❌ Erro ao gerar o MiniSite: ${msg}</div>`;
+          return;
         }
 
-        const data = await resp.json();
+        // 🔑 pega a URL final correta
+        const previewUrl = data?.urlFinal || data?.outputs?.previewUrl || data?.url || "";
+        const docxUrl = data?.outputs?.docxUrl || "";
 
-        if (data.ok) {
-          resultadoDiv.innerHTML = `
-            <p class="sucesso">✅ MiniSite gerado com sucesso!</p>
-            <div class="link-area">
-              <a href="${data.url}" target="_blank" style="color: lightblue;">Abrir MiniSite</a>
-              <button onclick="navigator.clipboard.writeText('${data.url}')">Copiar Link</button>
-            </div>
-          `;
-        } else {
-          resultadoDiv.innerHTML = `<p class="erro">❌ Erro: ${data.error || "Falha desconhecida"}</p>`;
+        let html = `<div class="sucesso">✅ MiniSite gerado!</div>`;
+        if (previewUrl) {
+          html += `
+            <div class="link">
+              <span>MiniSite:</span>
+              <code title="${previewUrl}">${previewUrl}</code>
+              <a class="btn-sm" href="${previewUrl}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-sm" id="copyMini" type="button">Copiar</button>
+            </div>`;
         }
-      } catch (err) {
-        resultadoDiv.innerHTML = `<p class="erro">❌ Erro ao gerar o MiniSite: ${err.message}</p>`;
+        if (docxUrl) {
+          html += `
+            <div class="link">
+              <span>DOCX:</span>
+              <code title="${docxUrl}">${docxUrl}</code>
+              <a class="btn-sm" href="${docxUrl}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-sm" id="copyDocx" type="button">Copiar</button>
+            </div>`;
+        }
+
+        r.innerHTML = html;
+
+        const copyMini = $("copyMini");
+        if (copyMini && previewUrl) copyMini.onclick = () => navigator.clipboard.writeText(previewUrl);
+        const copyDocx = $("copyDocx");
+        if (copyDocx && docxUrl) copyDocx.onclick = () => navigator.clipboard.writeText(docxUrl);
+
+      } catch (e) {
+        r.innerHTML = `<div class="erro">❌ Erro (JS): ${e?.message || e}</div>`;
       }
     });
   </script>
