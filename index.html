@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gerador de MiniSite</title>
-  <meta name="description" content="Gere automaticamente um MiniSite com link de WhatsApp e proposta em DOCX." />
+  <meta name="description" content="Gere automaticamente um MiniSite com WhatsApp e proposta em DOCX." />
   <meta name="theme-color" content="#0d1b2a" />
 
   <!-- Open Graph / Twitter -->
@@ -12,76 +12,102 @@
   <meta property="og:description" content="Crie uma landing page simples com WhatsApp e proposta em DOCX." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://minisites-servicos.vercel.app/" />
-  <meta property="og:image" content="https://minisites-servicos.vercel.app/og.png" />
-  <meta name="twitter:card" content="summary_large_image" />
 
   <!-- Favicon (SVG embutido) -->
   <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="24" fill="%230d1b2a"/><path d="M32 64h64" stroke="%23ffc300" stroke-width="10" stroke-linecap="round"/><circle cx="64" cy="64" r="28" fill="none" stroke="%23ffc300" stroke-width="10"/></svg>' />
 
   <style>
     :root{
-      --bg:#0d1b2a; --panel:#1b263b; --muted:#8fb3d6; --text:#ffffff; --cta:#ffc300; --cta-hover:#e6ac00; --border:#2a3b55; --ok:#22c55e; --err:#ef4444;
+      --bg:#0d1b2a; --panel:#121c2a; --panel-2:#1b263b; --muted:#8fb3d6; --text:#ffffff;
+      --cta:#ffc300; --cta-hover:#e6ac00; --border:#2a3b55; --ok:#22c55e; --err:#ef4444; --focus:#3b82f6;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      margin:0; padding:32px 16px; background:var(--bg);
-      color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0; padding:32px 16px; background:var(--bg); color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     .wrap{max-width:720px; margin:0 auto;}
-    h1{margin:0 0 12px; font-size:28px;}
+    h1{margin:0 0 10px; font-size:28px; font-weight:800}
     p.lead{margin:0 0 20px; color:var(--muted)}
     form{
-      background:var(--panel); border:1px solid var(--border);
-      padding:20px; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+      background:linear-gradient(180deg,var(--panel),var(--panel-2));
+      border:1px solid var(--border); padding:20px; border-radius:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
     }
     label{display:block; text-align:left; font-weight:600; margin:12px 0 6px;}
     input, textarea{
       width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border);
       background:#0f1f33; color:var(--text); font-size:16px; outline:none;
+      transition:border .2s, box-shadow .2s;
     }
-    input:focus, textarea:focus{border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+    input:focus, textarea:focus{
+      border-color:var(--focus); box-shadow:0 0 0 3px rgba(59,130,246,.25)
+    }
+    .row{display:flex; gap:10px; align-items:center}
     .muted{color:#b6c8da; font-size:13px; margin-top:4px}
+    .help-err{color:var(--err); font-size:13px; margin-top:6px; display:none}
+    .counter{font-size:12px; color:#9fb4ca; text-align:right; margin-top:4px}
     button{
-      margin-top:12px; width:100%; padding:14px; border:0; border-radius:10px;
+      margin-top:14px; width:100%; padding:14px; border:0; border-radius:10px;
       background:var(--cta); color:#000; font-weight:800; font-size:16px; cursor:pointer;
+      transition:filter .15s ease-in-out;
     }
     button:hover{background:var(--cta-hover)}
-    button[disabled]{opacity:.6; cursor:not-allowed}
+    button[disabled]{opacity:.65; cursor:not-allowed; filter:saturate(.8)}
     #resultado{
-      margin-top:16px; background:var(--panel); border:1px solid var(--border);
-      border-radius:12px; padding:16px; text-align:left; white-space:pre-wrap;
+      margin-top:16px; background:var(--panel-2); border:1px solid var(--border);
+      border-radius:12px; padding:16px; text-align:left; white-space:pre-wrap; display:none;
     }
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
-    .link-line{display:flex; gap:8px; align-items:center; overflow:hidden}
+    .link-line{display:flex; gap:8px; align-items:center; overflow:hidden; margin-top:6px}
     .link-line code{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#ffe082}
     .btn-sm{
       display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:8px;
       border:1px solid var(--border); background:#0f1f33; color:var(--text); text-decoration:none;
     }
-    .ok{color:var(--ok)} .err{color:var(--err)}
+    .status-ok{color:var(--ok); font-weight:700}
+    .status-err{color:var(--err); font-weight:700}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Gerador de MiniSite</h1>
-    <p class="lead">Preencha os campos e gere automaticamente uma landing page com WhatsApp e proposta em DOCX.</p>
+    <p class="lead">Preencha os campos e gere automaticamente uma landing page com WhatsApp e, se habilitado, uma proposta em DOCX.</p>
 
-    <form id="minisiteForm" novalidate>
+    <form id="minisiteForm" novalidate aria-describedby="formHelp">
+      <!-- honeypot (anti-bot) -->
+      <div class="sr-only" aria-hidden="true">
+        <label for="website">Não preencha este campo</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
       <label for="titulo">Título do serviço</label>
-      <input type="text" id="titulo" name="titulo" placeholder="Ex.: Designer Gráfico" required />
+      <input type="text" id="titulo" name="titulo" placeholder="Ex.: Designer Gráfico" autocomplete="off" required maxlength="80" />
+      <div id="errTitulo" class="help-err">Informe um título com pelo menos 3 caracteres.</div>
 
-      <label for="descricao">Descrição curta (máx. 2 linhas)</label>
-      <textarea id="descricao" name="descricao" rows="3" placeholder="Ex.: Criação de artes para redes sociais" required></textarea>
+      <label for="descricao">Descrição curta (máx. 160 caracteres)</label>
+      <textarea id="descricao" name="descricao" rows="3" placeholder="Ex.: Criação de artes para redes sociais" required maxlength="160"></textarea>
+      <div class="counter"><span id="descCount">0</span>/160</div>
+      <div id="errDesc" class="help-err">Não use links/URLs e mantenha até 160 caracteres.</div>
 
       <label for="telefone">WhatsApp com DDD</label>
       <input type="tel" id="telefone" name="telefone" inputmode="numeric" placeholder="(48) 99999-8888" required />
-      <div class="muted">Mascara automática; enviaremos apenas os dígitos.</div>
+      <div class="muted">A máscara é automática; enviaremos apenas os dígitos.</div>
+      <div id="errTel" class="help-err">Informe um WhatsApp válido (mín. 10 dígitos, com DDD).</div>
 
-      <button type="submit" id="btn">Criar MiniSite</button>
+      <button type="submit" id="btn" aria-live="polite">Criar MiniSite</button>
+      <div id="formHelp" class="sr-only">Campos obrigatórios: título, descrição e WhatsApp.</div>
     </form>
 
-    <div id="resultado" style="display:none;"></div>
+    <div id="resultado" role="status" aria-live="polite"></div>
   </div>
+
+  <noscript>
+    <div style="max-width:720px;margin:16px auto;padding:12px;border-radius:10px;background:#3b1d1d;color:#fff">
+      Este aplicativo requer JavaScript habilitado.
+    </div>
+  </noscript>
 
   <script>
     // ===== Config =====
@@ -90,6 +116,9 @@
     // ===== Helpers =====
     const $ = (id) => document.getElementById(id);
     const onlyDigits = (s) => String(s || "").replace(/\D+/g, "");
+    const hasURL = (txt) => /(https?:\/\/|www\.)/i.test(txt);
+    const scrollIntoView = (el) => el?.scrollIntoView({ behavior: "smooth", block: "start" });
+
     const maskPhoneBR = (digits) => {
       const d = onlyDigits(digits).slice(0, 11); // até 11
       if (d.length <= 2) return d;
@@ -97,41 +126,83 @@
       if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
       return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`; // 11 dígitos
     };
+
     const setLoading = (is) => {
       const btn = $("btn");
       btn.disabled = is;
       btn.textContent = is ? "Gerando..." : "Criar MiniSite";
     };
-    const showResult = (html) => {
+
+    const showResult = (html, isError = false) => {
       const box = $("resultado");
       box.style.display = "block";
       box.innerHTML = html;
-    };
-    const copyToClipboard = async (text) => {
-      try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+      box.classList.toggle("status-err", isError);
+      scrollIntoView(box);
     };
 
-    // ===== Máscara de telefone em tempo real =====
-    $("telefone").addEventListener("input", (e) => {
-      const v = e.target.value || "";
-      e.target.value = maskPhoneBR(v);
-    });
+    const copy = async (text, btn) => {
+      try { await navigator.clipboard.writeText(text); btn.textContent = "Copiado!"; }
+      catch  { btn.textContent = "Falhou"; }
+      finally { setTimeout(() => (btn.textContent = "Copiar"), 1200); }
+    };
 
-    // ===== Envio =====
+    // ===== UI bindings =====
+    $("telefone").addEventListener("input", (e) => e.target.value = maskPhoneBR(e.target.value));
+    $("descricao").addEventListener("input", (e) => $("descCount").textContent = e.target.value.length);
+
+    // ===== Validação básica =====
+    function validate({ servico, descricaoCurta, whatsDigits, honeypot }) {
+      // honeypot
+      if (honeypot) return { ok:false, msg:"Bloqueado por validação anti-bot." };
+      let ok = true;
+
+      // título
+      const errT = $("errTitulo");
+      if (!servico || servico.trim().length < 3) { errT.style.display = "block"; ok = false; }
+      else { errT.style.display = "none"; }
+
+      // descrição
+      const errD = $("errDesc");
+      if (!descricaoCurta || hasURL(descricaoCurta) || descricaoCurta.length > 160) { errD.style.display = "block"; ok = false; }
+      else { errD.style.display = "none"; }
+
+      // telefone
+      const errW = $("errTel");
+      if (whatsDigits.length < 10) { errW.style.display = "block"; ok = false; }
+      else { errW.style.display = "none"; }
+
+      return { ok, msg: ok ? "" : "Verifique os campos em destaque." };
+    }
+
+    // ===== Cooldown simples (5s) =====
+    let lastSubmit = 0;
+    const COOLDOWN_MS = 5000;
+
+    // ===== Submit =====
     $("minisiteForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      showResult("Gerando MiniSite...");
-      setLoading(true);
 
+      const now = Date.now();
+      if (now - lastSubmit < COOLDOWN_MS) {
+        showResult(`Aguarde alguns segundos antes de enviar novamente.`, true);
+        return;
+      }
+
+      const honeypot = $("website").value;
       const servico = $("titulo").value.trim();
       const descricaoCurta = $("descricao").value.trim();
       const whatsDigits = onlyDigits($("telefone").value);
 
-      if (!servico || !descricaoCurta || whatsDigits.length < 10) {
-        showResult("❌ Erro: preencha todos os campos (WhatsApp com DDD, mínimo 10 dígitos).");
-        setLoading(false);
+      const v = validate({ servico, descricaoCurta, whatsDigits, honeypot });
+      if (!v.ok) {
+        showResult("❌ " + v.msg, true);
         return;
       }
+
+      setLoading(true);
+      lastSubmit = now;
+      showResult("Gerando MiniSite...");
 
       try {
         const r = await fetch(ENDPOINT, {
@@ -144,49 +215,45 @@
 
         if (!r.ok || !data.ok) {
           const msg = data?.error || data?.mensagem || `Falha (HTTP ${r.status})`;
-          showResult(`❌ Erro ao gerar o MiniSite: ${msg}`);
-          setLoading(false);
+          showResult(`❌ Erro ao gerar o MiniSite: ${msg}`, true);
           return;
         }
 
-        const mini = data?.outputs?.previewUrl || "(aguarde alguns segundos e atualize)";
-        const docx = data?.outputs?.docxUrl || null;
+        const mini = data?.outputs?.previewUrl || "";
+        const docx = data?.outputs?.docxUrl || "";
 
-        const miniLine = `
-          <div class="link-line">
-            <span class="ok">✅ MiniSite:</span>
-            <code title="${mini}">${mini}</code>
-            ${mini ? `<a class="btn-sm" href="${mini}" target="_blank" rel="noopener">Abrir</a>` : ""}
-            ${mini ? `<button class="btn-sm" id="copyMini" type="button">Copiar</button>` : ""}
-          </div>`;
+        let html = "";
+        if (mini) {
+          html += `
+            <div class="link-line">
+              <span class="status-ok">✅ MiniSite:</span>
+              <code title="${mini}">${mini}</code>
+              <a class="btn-sm" href="${mini}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-sm" id="copyMini" type="button" aria-label="Copiar link do MiniSite">Copiar</button>
+            </div>`;
+        } else {
+          html += `<div>🕓 Seu MiniSite está publicando. Atualize em alguns segundos.</div>`;
+        }
 
-        const docxLine = docx ? `
-          <div class="link-line" style="margin-top:10px">
-            <span>📄 Proposta:</span>
-            <code title="${docx}">${docx}</code>
-            <a class="btn-sm" href="${docx}" target="_blank" rel="noopener">Abrir</a>
-            <button class="btn-sm" id="copyDocx" type="button">Copiar</button>
-          </div>` : "";
+        if (docx) {
+          html += `
+            <div class="link-line">
+              <span>📄 Proposta:</span>
+              <code title="${docx}">${docx}</code>
+              <a class="btn-sm" href="${docx}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-sm" id="copyDocx" type="button" aria-label="Copiar link do DOCX">Copiar</button>
+            </div>`;
+        }
 
-        showResult(`${miniLine}${docxLine}`);
+        showResult(html, false);
 
-        // Bind dos botões de copiar
-        const copyMini = document.getElementById("copyMini");
-        if (copyMini) copyMini.addEventListener("click", async () => {
-          const ok = await copyToClipboard(mini);
-          copyMini.textContent = ok ? "Copiado!" : "Falhou";
-          setTimeout(() => (copyMini.textContent = "Copiar"), 1200);
-        });
-
-        const copyDocx = document.getElementById("copyDocx");
-        if (copyDocx) copyDocx.addEventListener("click", async () => {
-          const ok = await copyToClipboard(docx);
-          copyDocx.textContent = ok ? "Copiado!" : "Falhou";
-          setTimeout(() => (copyDocx.textContent = "Copiar"), 1200);
-        });
+        const copyMini = $("copyMini");
+        if (copyMini && mini) copyMini.addEventListener("click", () => copy(mini, copyMini));
+        const copyDocx = $("copyDocx");
+        if (copyDocx && docx) copyDocx.addEventListener("click", () => copy(docx, copyDocx));
 
       } catch (err) {
-        showResult(`❌ Erro (JS): ${err?.message || err}`);
+        showResult(`❌ Erro (JS): ${err?.message || err}`, true);
       } finally {
         setLoading(false);
       }
