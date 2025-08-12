@@ -1,14 +1,21 @@
-// /api/gerar.js  (Vercel Serverless Function)
-// Proxy para evitar CORS: recebe do front e encaminha para o Netlify.
+// /api/gerar.js
+// Proxy na Vercel: recebe do front e repassa ao Netlify, evitando CORS.
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
 
   try {
-    const { servico, descricaoCurta, whats } = req.body || {};
+    let body = {};
+    try {
+      body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
+    } catch {
+      // se vier como string não JSON válida
+    }
+
+    const { servico, descricaoCurta, whats } = body;
     if (!servico || !descricaoCurta || !whats) {
       return res.status(400).json({ ok: false, error: "Campos obrigatórios ausentes" });
     }
@@ -18,7 +25,7 @@ export default async function handler(req, res) {
     const upstream = await fetch(NETLIFY_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ servico, descricaoCurta, whats }),
+      body: JSON.stringify({ servico, descricaoCurta, whats })
     });
 
     const data = await upstream.json().catch(() => ({}));
@@ -26,4 +33,4 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ ok: false, error: `Proxy error: ${err?.message || err}` });
   }
-}
+};
