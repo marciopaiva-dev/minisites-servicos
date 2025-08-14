@@ -42,107 +42,68 @@
   </div>
 
   <script>
-  const ENDPOINT = "/api/gerar";
-  const $ = (id) => document.getElementById(id);
+    const ENDPOINT = "/api/gerar";
+    const $ = (id) => document.getElementById(id);
 
-  function setLoading(is) {
-    const btn = $("btn");
-    btn.disabled = is;
-    btn.textContent = is ? "Gerando..." : "Criar MiniSite";
-  }
+    $("btn").addEventListener("click", async () => {
+      const servico = $("servico").value.trim();
+      const descricaoCurta = $("descricaoCurta").value.trim();
+      const whats = $("whats").value.replace(/\D/g, "");
 
-  async function copyToClipboard(text, btnEl) {
-    try {
-      await navigator.clipboard.writeText(text);
-      btnEl.textContent = "Copiado!";
-    } catch {
-      btnEl.textContent = "Falhou :(";
-    } finally {
-      setTimeout(() => (btnEl.textContent = "Copiar"), 1200);
-    }
-  }
+      const r = $("resultado");
+      r.style.display = "block";
+      r.className = "resultado";
+      r.textContent = "Gerando MiniSite...";
 
-  $("btn").addEventListener("click", async () => {
-    const servico = $("servico").value.trim();
-    const descricaoCurta = $("descricaoCurta").value.trim();
-    const whats = $("whats").value.replace(/\D/g, "");
+      try {
+        const resp = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ servico, descricaoCurta, whats })
+        });
 
-    const r = $("resultado");
-    r.style.display = "block";
-    r.className = "resultado";
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.ok) {
+          const msg = data?.error || data?.mensagem || `Falha (HTTP ${resp.status})`;
+          r.innerHTML = `<div class="erro">❌ Erro ao gerar o MiniSite: ${msg}</div>`;
+          return;
+        }
 
-    // validação simples
-    if (!servico || !descricaoCurta || !whats) {
-      r.innerHTML = `<div class="erro">❌ Preencha todos os campos.</div>`;
-      return;
-    }
+        // 🔑 pega a URL final correta
+        const previewUrl = data?.urlFinal || data?.outputs?.previewUrl || data?.url || "";
+        const docxUrl = data?.outputs?.docxUrl || "";
 
-    r.textContent = "Gerando MiniSite...";
-    setLoading(true);
+        let html = `<div class="sucesso">✅ MiniSite gerado!</div>`;
+        if (previewUrl) {
+          html += `
+            <div class="link">
+              <span>MiniSite:</span>
+              <code title="${previewUrl}">${previewUrl}</code>
+              <a class="btn-sm" href="${previewUrl}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-sm" id="copyMini" type="button">Copiar</button>
+            </div>`;
+        }
+        if (docxUrl) {
+          html += `
+            <div class="link">
+              <span>DOCX:</span>
+              <code title="${docxUrl}">${docxUrl}</code>
+              <a class="btn-sm" href="${docxUrl}" target="_blank" rel="noopener">Abrir</a>
+              <button class="btn-sm" id="copyDocx" type="button">Copiar</button>
+            </div>`;
+        }
 
-    try {
-      const resp = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ servico, descricaoCurta, whats })
-      });
+        r.innerHTML = html;
 
-      // se a API responder com texto vazio, evita .json() quebrar
-      let data = {};
-      try { data = await resp.json(); } catch { /* segue vazio */ }
+        const copyMini = $("copyMini");
+        if (copyMini && previewUrl) copyMini.onclick = () => navigator.clipboard.writeText(previewUrl);
+        const copyDocx = $("copyDocx");
+        if (copyDocx && docxUrl) copyDocx.onclick = () => navigator.clipboard.writeText(docxUrl);
 
-      if (!resp.ok || !data.ok) {
-        const msg = data?.error || data?.mensagem || `Falha (HTTP ${resp.status})`;
-        r.innerHTML = `<div class="erro">❌ Erro ao gerar o MiniSite: ${msg}</div>`;
-        return;
+      } catch (e) {
+        r.innerHTML = `<div class="erro">❌ Erro (JS): ${e?.message || e}</div>`;
       }
-
-      // 🔑 link final (ordem de preferência)
-      const previewUrl =
-        (data && (data.urlFinal || (data.outputs && data.outputs.previewUrl) || data.url)) || "";
-      const docxUrl = (data && data.outputs && data.outputs.docxUrl) || "";
-
-      let html = `<div class="sucesso">✅ MiniSite gerado!</div>`;
-
-      if (previewUrl) {
-        html += `
-          <div class="link">
-            <span>MiniSite:</span>
-            <code title="${previewUrl}">${previewUrl}</code>
-            <a class="btn-sm" href="${previewUrl}" target="_blank" rel="noopener">Abrir</a>
-            <button class="btn-sm" id="copyMini" type="button">Copiar</button>
-          </div>`;
-      } else {
-        html += `<div class="link"><span>MiniSite:</span><code>(publicando... tente em alguns segundos)</code></div>`;
-      }
-
-      if (docxUrl) {
-        html += `
-          <div class="link">
-            <span>DOCX:</span>
-            <code title="${docxUrl}">${docxUrl}</code>
-            <a class="btn-sm" href="${docxUrl}" target="_blank" rel="noopener">Abrir</a>
-            <button class="btn-sm" id="copyDocx" type="button">Copiar</button>
-          </div>`;
-      }
-
-      r.innerHTML = html;
-
-      // handlers de copiar
-      const copyMini = $("copyMini");
-      if (copyMini && previewUrl)
-        copyMini.onclick = () => copyToClipboard(previewUrl, copyMini);
-
-      const copyDocx = $("copyDocx");
-      if (copyDocx && docxUrl)
-        copyDocx.onclick = () => copyToClipboard(docxUrl, copyDocx);
-
-    } catch (e) {
-      r.innerHTML = `<div class="erro">❌ Erro (JS): ${e?.message || e}</div>`;
-    } finally {
-      setLoading(false);
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 </html>
