@@ -1,12 +1,10 @@
 {
   "version": 2,
   "functions": {
-    "api/gerar.js": {
-      "runtime": "nodejs18.x"
-    }
+    "api/*.js": { "runtime": "nodejs18.x" }
   },
   "routes": [
-    { "src": "^/api/gerar$", "dest": "/api/gerar.js" },
+    { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
