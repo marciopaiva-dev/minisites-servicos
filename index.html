@@ -4,30 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gerador de MiniSite</title>
-  <meta name="description" content="Gere automaticamente um MiniSite com WhatsApp e, se habilitado, uma proposta em DOCX." />
+  <meta name="description" content="Gere automaticamente um MiniSite com WhatsApp e proposta em DOCX." />
   <style>
-    :root{
-      --bg:#0d1b2a; --panel:#121c2a; --panel-2:#1b263b; --muted:#8fb3d6; --text:#ffffff;
-      --cta:#ffc300; --cta-hover:#e6ac00; --border:#2a3b55; --ok:#22c55e; --err:#ef4444; --focus:#3b82f6;
-    }
-    *{box-sizing:border-box}
-    body{margin:0; padding:32px 16px; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
-    .container{max-width:720px;margin:0 auto}
+    body{background:#0f172a;color:#fff;font-family:Arial,system-ui,sans-serif;margin:0}
+    .container{max-width:720px;margin:0 auto;padding:24px}
     h1{color:#facc15;margin:0 0 10px}
     p.lead{color:#9fb4ca;margin:0 0 16px}
     label{display:block;margin:12px 0 6px;font-weight:700}
-    input,textarea{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:#0f1f33;color:#fff;font-size:16px;outline:none}
-    input:focus,textarea:focus{border-color:var(--focus); box-shadow:0 0 0 3px rgba(59,130,246,.25)}
-    button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:var(--cta);font-weight:800;cursor:pointer}
-    button:hover{background:var(--cta-hover)}
-    button[disabled]{opacity:.65;cursor:not-allowed}
+    input,textarea{width:100%;padding:10px;border-radius:8px;border:0;font-size:16px;color:#0f172a}
+    button{width:100%;margin-top:14px;padding:12px;border:0;border-radius:10px;background:#facc15;font-weight:800;cursor:pointer}
+    button:hover{background:#eab308}
     .resultado{display:none;margin-top:16px;background:#111827;border:1px solid #233045;border-radius:10px;padding:12px}
     .erro{color:#f87171;font-weight:700}
     .sucesso{color:#22c55e;font-weight:700}
-    .link{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-    .link code{color:#ffe082;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;background:#0b1220;border:1px solid var(--border);padding:8px 10px;border-radius:8px}
+    .link{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .link code{color:#ffe082;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
     .btn-sm{padding:8px 10px;border-radius:8px;border:1px solid #233045;background:#0b1220;color:#fff;text-decoration:none}
-    .muted{color:#9fb4ca;font-size:12px;margin-top:4px}
   </style>
 </head>
 <body>
@@ -40,10 +32,9 @@
 
     <label for="descricaoCurta">Descrição curta (máx. 160 caracteres)</label>
     <textarea id="descricaoCurta" maxlength="160" placeholder="Ex.: Criação de artes para redes sociais"></textarea>
-    <div class="muted"><span id="descCount">0</span>/160</div>
 
     <label for="whats">WhatsApp com DDD</label>
-    <input id="whats" placeholder="(48) 99999-8888" />
+    <input id="whats" placeholder="(48) 99999-8889" />
 
     <button id="btn">Criar MiniSite</button>
 
@@ -51,65 +42,39 @@
   </div>
 
   <script>
-    const ENDPOINT = "https://minisites-servicos.netlify.app/.netlify/functions/gerar";
+    // 🔹 Aponte para o backend no Netlify
+    const ENDPOINT = "https://SEU-SITE-BACKEND.netlify.app/.netlify/functions/gerar";
     const $ = (id) => document.getElementById(id);
-
-    function setLoading(is){
-      const b = $("btn");
-      b.disabled = is;
-      b.textContent = is ? "Gerando..." : "Criar MiniSite";
-    }
-    function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
-
-    $("descricaoCurta").addEventListener("input", e => $("descCount").textContent = e.target.value.length);
-    $("whats").addEventListener("input", e => {
-      const d = onlyDigits(e.target.value).slice(0,11);
-      if (d.length <= 2) e.target.value = d;
-      else if (d.length <= 6) e.target.value = `(${d.slice(0,2)}) ${d.slice(2)}`;
-      else if (d.length <= 10) e.target.value = `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
-      else e.target.value = `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-    });
 
     $("btn").addEventListener("click", async () => {
       const servico = $("servico").value.trim();
       const descricaoCurta = $("descricaoCurta").value.trim();
-      const whats = onlyDigits($("whats").value);
+      const whats = $("whats").value.replace(/\D/g, "");
 
       const r = $("resultado");
       r.style.display = "block";
       r.className = "resultado";
-
-      if (!servico || !descricaoCurta || !whats){
-        r.innerHTML = `<div class="erro">❌ Preencha todos os campos.</div>`;
-        return;
-      }
-
       r.textContent = "Gerando MiniSite...";
-      setLoading(true);
 
-      try{
+      try {
         const resp = await fetch(ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ servico, descricaoCurta, whats })
         });
 
-        let data = {};
-        try { data = await resp.json(); } catch {}
-
-        if (!resp.ok || !data.ok){
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.ok) {
           const msg = data?.error || data?.mensagem || `Falha (HTTP ${resp.status})`;
           r.innerHTML = `<div class="erro">❌ Erro ao gerar o MiniSite: ${msg}</div>`;
           return;
         }
 
-        // pega a URL final (prioriza urlFinal; fallback para outputs.previewUrl e url)
         const previewUrl = data?.urlFinal || data?.outputs?.previewUrl || data?.url || "";
-        const docxUrl    = data?.outputs?.docxUrl || "";
+        const docxUrl = data?.outputs?.docxUrl || "";
 
         let html = `<div class="sucesso">✅ MiniSite gerado!</div>`;
-
-        if (previewUrl){
+        if (previewUrl) {
           html += `
             <div class="link">
               <span>MiniSite:</span>
@@ -117,11 +82,8 @@
               <a class="btn-sm" href="${previewUrl}" target="_blank" rel="noopener">Abrir</a>
               <button class="btn-sm" id="copyMini" type="button">Copiar</button>
             </div>`;
-        } else {
-          html += `<div class="link"><span>MiniSite:</span><code>(publicando... tente em alguns segundos)</code></div>`;
         }
-
-        if (docxUrl){
+        if (docxUrl) {
           html += `
             <div class="link">
               <span>DOCX:</span>
@@ -133,27 +95,13 @@
 
         r.innerHTML = html;
 
-        const copyMini = document.getElementById("copyMini");
-        if (copyMini && previewUrl){
-          copyMini.onclick = async () => {
-            try { await navigator.clipboard.writeText(previewUrl); copyMini.textContent = "Copiado!"; }
-            catch { copyMini.textContent = "Falhou :("; }
-            finally { setTimeout(()=>copyMini.textContent="Copiar",1200); }
-          };
-        }
-        const copyDocx = document.getElementById("copyDocx");
-        if (copyDocx && docxUrl){
-          copyDocx.onclick = async () => {
-            try { await navigator.clipboard.writeText(docxUrl); copyDocx.textContent = "Copiado!"; }
-            catch { copyDocx.textContent = "Falhou :("; }
-            finally { setTimeout(()=>copyDocx.textContent="Copiar",1200); }
-          };
-        }
+        const copyMini = $("copyMini");
+        if (copyMini && previewUrl) copyMini.onclick = () => navigator.clipboard.writeText(previewUrl);
+        const copyDocx = $("copyDocx");
+        if (copyDocx && docxUrl) copyDocx.onclick = () => navigator.clipboard.writeText(docxUrl);
 
-      }catch(e){
+      } catch (e) {
         r.innerHTML = `<div class="erro">❌ Erro (JS): ${e?.message || e}</div>`;
-      }finally{
-        setLoading(false);
       }
     });
   </script>
