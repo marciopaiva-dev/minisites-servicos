@@ -4,5 +4,10 @@ module.exports = async (req, res) => {
     res.setHeader("Allow", "GET, HEAD");
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
-  return res.status(200).json({ ok: true, ping: "alive", plataforma: "vercel", agora: new Date().toISOString() });
+  return res.status(200).json({
+    ok: true,
+    ping: "alive",
+    plataforma: "vercel",
+    agora: new Date().toISOString()
+  });
 };
