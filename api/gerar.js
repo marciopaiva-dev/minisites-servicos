@@ -1,4 +1,3 @@
-// /api/gerar.js (Vercel)
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -13,7 +12,6 @@ module.exports = async (req, res) => {
       return res.status(400).json({ ok: false, error: "Campos obrigatórios ausentes" });
     }
 
-    // ✅ SUA função no Netlify:
     const NETLIFY_ENDPOINT = "https://minisites-servicos.netlify.app/.netlify/functions/gerar";
 
     const upstream = await fetch(NETLIFY_ENDPOINT, {
